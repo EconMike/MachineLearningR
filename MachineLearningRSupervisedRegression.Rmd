@@ -39,7 +39,7 @@ library(car)
 You can also embed plots, for example:
 
 ```{r data, echo=FALSE}
-df <- read.csv('F:/Your Directory/Fish.csv')
+df <- read.csv('F:/YOUR DIRECTORY/Fish.csv')
 
 head(df)
 
@@ -52,9 +52,7 @@ summary(df)
 ```
 
 
-##check for missing observations
-
-
+#check for missing observations
 
 ```{r miss, echo=TRUE}
 # count total missing values 
@@ -78,7 +76,7 @@ ggplot(data = df) +
 ##Cross Validation
 Running training on different splits of the data can be translated into validations, for example validating that the performance output of each model is within a given range, ensuring that the model performs well.
 
-Types of Cross-validations methods:
+Types of validations:
 Random Split
 Time-Based Split
 K-Fold Cross-Validation
@@ -103,9 +101,31 @@ modelResiduals <- as.data.frame(residuals(model))
 ggplot(modelResiduals, aes(residuals(model))) +
   geom_histogram(fill='deepskyblue', color='black')
 ```
+
+##Model evaulation measures
+
+```{r evluation, echo=TRUE}
+#Mean Squared Error (MSE): The average squared difference between the predicted #and actual values of the target variable.
+res <- model$residuals
+mse<-mean(res**2)
+mse
+
+#Root Mean Squared Error (RMSE): The square root of the mean squared error.
+
+# For convenience put the residuals in the variable res
+res <- model$residuals
+
+# Calculate RMSE, assign it to the variable rmse and print it
+(rmse <- sqrt(mean(res**2)))
+
+#R2 – Score
+	R2_<- cor(model$fitted.values, trainSet$Weight)^2
+	R2_
+```
+
 ##Research tip
 our model has variables that are not significant, Why?
-What does Length 1 and 2 represent, lets look at the slides. 
+What is Length 1 and 2 represent, lets look at the slides. 
 
 
 ##New model
@@ -127,6 +147,8 @@ summary(model3)
 
 
 ```
+
+
 
 ```{r, echo=TRUE}
 modelResiduals <- as.data.frame(residuals(model3))
@@ -162,7 +184,7 @@ R2_test3
 
 ##Model evaulation measures
 
-```{r evluation, echo=TRUE}
+```{r evluation2, echo=TRUE}
 #calculate Evaulation measures
 
 #Mean Squared Error (MSE): The average squared difference between the predicted #and actual values of the target variable.
