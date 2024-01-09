@@ -1,0 +1,190 @@
+---
+title: "Machine Learning in R"
+author: "Mike Jadoo"
+date: "2024-01-07"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Machine Learning
+
+Machine learning is a branch of artificial intelligence (AI) and computer science which focuses on the use of data and algorithms to imitate the way that humans learn.
+
+Why is this important: It helps improving accuracy.
+
+Load packages
+
+dplyr- for data wrangling
+ggplot2 and corrgram for visualization
+caTools -versatile tool that allows users to perform moving window statistics for           data analysis.
+caret - powerful train function that allows you to fit over 230 different models           using one syntax. 
+car   -provides functions for performing linear regression analysis.
+
+```{r load_pk}
+library(dplyr)
+library(ggplot2)
+library(corrgram)
+library(caTools)
+library(caret)
+library(car)
+
+
+```
+
+## import data
+
+You can also embed plots, for example:
+
+```{r data, echo=FALSE}
+df <- read.csv('F:/DRIVE/LOOKING WORK/Job Search April 2023/Accenture Fed/Fish.csv')
+
+head(df)
+
+```
+
+## view the data summary statistics
+
+```{r stats, echo=TRUE}
+summary(df)
+```
+
+
+#check for missing observations
+
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+
+```{r miss, echo=TRUE}
+# count total missing values 
+
+print("Count of total missing values  ")
+sum(is.na(df))
+
+print("Which column has missing values  ")
+colSums(is.na(df))
+
+
+```
+```{r plot, echo=TRUE}
+
+ggplot(data = df) + 
+  geom_point(mapping = aes(x = Length3, y = Weight)) + 
+  facet_wrap(~ Species, nrow = 2)
+
+```
+
+##Cross Validation
+Running training on different splits of the data can be translated into validations, for example validating that the performance output of each model is within a given range, ensuring that the model performs well.
+
+Types of validations:
+Random Split
+Time-Based Split
+K-Fold Cross-Validation
+
+We are using Random split (similar to bootstrping) randomly sample a percentage of data into training and testing sets. The advantage of this method is that there is a good chance that the original population is well represented in all two sets. the hope is that random splitting will prevent a biased sampling of data.
+
+```{r cross_val, echo=TRUE}
+
+#create the training data, test data  80/20
+sampleSplit <- sample.split(Y=df$Weight, SplitRatio=0.8)
+trainSet <- subset(x=df, sampleSplit==TRUE)
+testSet <- subset(x=df, sampleSplit==FALSE)
+
+#train the data
+model <- lm(formula=Weight ~ ., data=trainSet)
+
+#view results
+summary(model)
+
+modelResiduals <- as.data.frame(residuals(model))
+
+ggplot(modelResiduals, aes(residuals(model))) +
+  geom_histogram(fill='deepskyblue', color='black')
+```
+##Research tip
+our model has variables that are not significant, Why?
+What is Length 1 and 2 represent, lets look at the slides. 
+
+
+##New model
+
+```{r nm, echo=TRUE}
+#only using significate variables
+
+df3<-df%>%select(Species,Length3,Weight)
+set.seed(42)
+
+#create the training data, test data  80/20
+sampleSplit3 <- sample.split(Y=df3$Weight, SplitRatio=0.8)
+trainSet3 <- subset(x=df3, sampleSplit3==TRUE)
+testSet3 <- subset(x=df3, sampleSplit3==FALSE)
+
+#train the data
+model3 <- lm(formula=Weight ~ ., data=trainSet3)
+summary(model3)
+
+
+```
+
+```{r, echo=TRUE}
+modelResiduals <- as.data.frame(residuals(model3))
+
+ggplot(modelResiduals, aes(residuals(model3))) +
+  geom_histogram(fill='deepskyblue', color='black')
+```
+
+
+##Check for overfitting
+
+Overfitting happens due to several reasons, such as:
+•    The training data size is too small and does not contain enough data samples to accurately represent all possible input data values.
+•    The training data contains large amounts of irrelevant information, called noisy data.
+•    The model trains for too long on a single sample set of data.
+•    The model complexity is high, so it learns the noise within the training data.
+
+```{r}
+#using R2 of the training and test set  to check for overfitting
+
+R2_training<- cor(model3$fitted.values, trainSet3$Weight)^2
+R2_training
+
+model_test3 <- lm(formula=Weight ~ ., data=testSet3)
+summary(model_test3)
+R2_test3<- cor(model_test3$fitted.values, testSet3$Weight)^2
+R2_test3
+
+#avPlots(model_test3)
+
+```
+
+
+##Model evaulation measures
+
+```{r evluation, echo=TRUE}
+#calculate Evaulation measures
+
+#Mean Squared Error (MSE): The average squared difference between the predicted #and actual values of the target variable.
+res <- model_test3$residuals
+mse<-mean(res**2)
+mse
+
+#Root Mean Squared Error (RMSE): The square root of the mean squared error.
+
+# For convenience put the residuals in the variable res
+res <- model_test3$residuals
+
+# Calculate RMSE, assign it to the variable rmse and print it
+(rmse <- sqrt(mean(res**2)))
+
+#R2 – Score
+	R2_test3<- cor(model_test3$fitted.values, testSet3$Weight)^2
+	R2_test3
+```
+
+
+
