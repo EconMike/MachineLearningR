@@ -52,10 +52,7 @@ summary(df)
 ```
 
 
-#check for missing observations
-
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+##check for missing observations
 
 
 
@@ -81,7 +78,7 @@ ggplot(data = df) +
 ##Cross Validation
 Running training on different splits of the data can be translated into validations, for example validating that the performance output of each model is within a given range, ensuring that the model performs well.
 
-Types of validations:
+Types of Cross-validations methods:
 Random Split
 Time-Based Split
 K-Fold Cross-Validation
@@ -108,7 +105,7 @@ ggplot(modelResiduals, aes(residuals(model))) +
 ```
 ##Research tip
 our model has variables that are not significant, Why?
-What is Length 1 and 2 represent, lets look at the slides. 
+What does Length 1 and 2 represent, lets look at the slides. 
 
 
 ##New model
