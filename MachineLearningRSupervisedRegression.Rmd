@@ -39,7 +39,7 @@ library(car)
 You can also embed plots, for example:
 
 ```{r data, echo=FALSE}
-df <- read.csv('F:/DRIVE/LOOKING WORK/Job Search April 2023/Accenture Fed/Fish.csv')
+df <- read.csv('F:/Your Directory/Fish.csv')
 
 head(df)
 
