@@ -24,14 +24,20 @@ caret - powerful train function that allows you to fit over 230 different models
 car   -provides functions for performing linear regression analysis.
 
 ```{r load_pk}
+#for Data wrangling
 library(dplyr)
+
+#for data viz
 library(ggplot2)
 library(corrgram)
+library(gridExtra)
+
+#for Machine Learning
 library(caTools)
 library(caret)
 library(car)
 
-
+options(max.print=999999)
 ```
 
 ## import data
@@ -43,9 +49,11 @@ df <- read.csv('F:/YOUR DIRECTORY/Fish.csv')
 
 head(df)
 
+#structure of data
+str(df)
 ```
 
-## view the data summary statistics
+## Exploratory Data Analysis  - view the data summary statistics
 
 ```{r stats, echo=TRUE}
 summary(df)
@@ -65,12 +73,44 @@ colSums(is.na(df))
 
 
 ```
+
+
 ```{r plot, echo=TRUE}
 
-ggplot(data = df) + 
-  geom_point(mapping = aes(x = Length3, y = Weight)) + 
-  facet_wrap(~ Species, nrow = 2)
 
+dfm1<-df%>%select(Height, Width,Length1,Length2, Length3,Weight)
+set.seed(100)
+
+boxplot(dfm1)
+
+
+p1<- ggplot(dfm1, aes(y = Weight, x = Height)) +
+  geom_point()
+p2<- ggplot(dfm1, aes(y = Weight, x = Width)) +
+  geom_point()
+p3<- ggplot(dfm1, aes(y = Weight, x = Length1)) +
+  geom_point()
+p4<- ggplot(dfm1, aes(y = Weight, x = Length2)) +
+  geom_point()
+p5<- ggplot(dfm1, aes(y = Weight, x = Length3)) +
+  geom_point()
+
+
+grid.arrange(
+  p1,
+  p2,
+  p3,
+  p4,
+  p5,
+  nrow = 1,
+  top = "Title of the page",
+  bottom = textGrob(
+    "this footnote is right-justified",
+    gp = gpar(fontface = 3, fontsize = 9),
+    hjust = 1,
+    x = 1
+  )
+)
 ```
 
 ##Cross Validation
@@ -86,75 +126,142 @@ We are using Random split (similar to bootstrping) randomly sample a percentage 
 ```{r cross_val, echo=TRUE}
 
 #create the training data, test data  80/20
-sampleSplit <- sample.split(Y=df$Weight, SplitRatio=0.8)
-trainSet <- subset(x=df, sampleSplit==TRUE)
-testSet <- subset(x=df, sampleSplit==FALSE)
+sampleSplit <- sample.split(Y=dfm1$Weight, SplitRatio=0.8)
+trainSet <- subset(x=dfm1, sampleSplit==TRUE)
+testSet <- subset(x=dfm1, sampleSplit==FALSE)
 
 #train the data
-model <- lm(formula=Weight ~ ., data=trainSet)
+model1 <- lm(formula=Weight ~ ., data=trainSet)
 
 #view results
-summary(model)
+summary(model1)
 
-modelResiduals <- as.data.frame(residuals(model))
+modelResiduals1 <- as.data.frame(residuals(model1))
 
-ggplot(modelResiduals, aes(residuals(model))) +
-  geom_histogram(fill='deepskyblue', color='black')
+plot(model1, which=1, col=c("blue"))
+
+#qqnorm(model1$residuals)
+qqPlot(model1$residuals)
 ```
+
+
+```{r train, echo=TRUE}
+#using R2 of the training and test set  to check for overfitting
+
+R2_training1<- cor(model1$fitted.values, trainSet$Weight)^2
+R2_training1
+
+model_test1 <- lm(formula=Weight ~ ., data=testSet)
+#summary(model_test1)
+
+R2_test1<- cor(model_test1$fitted.values, testSet$Weight)^2
+R2_test1
+
+
+message('Checking for Overfitting','\n','Training data R2: ',format(R2_training1 , digits = 3) , '  Test data R2: ',format(R2_test1, digits = 3))
+
+```
+
+
 
 ##Model evaulation measures
 
 ```{r evluation, echo=TRUE}
 #Mean Squared Error (MSE): The average squared difference between the predicted #and actual values of the target variable.
-res <- model$residuals
+res <- model1$residuals
 mse<-mean(res**2)
-mse
+#mse
 
 #Root Mean Squared Error (RMSE): The square root of the mean squared error.
 
 # For convenience put the residuals in the variable res
-res <- model$residuals
+res <- model1$residuals
 
 # Calculate RMSE, assign it to the variable rmse and print it
-(rmse <- sqrt(mean(res**2)))
+rmse <- sqrt(mean(res**2))
 
 #R2 – Score
-	R2_<- cor(model$fitted.values, trainSet$Weight)^2
-	R2_
+	R2_<- cor(model1$fitted.values, trainSet$Weight)^2
+	#R2_
+message('Model evaulation measures','\n','R2: ',format(R2_ , digits = 3) , '  RMSE: ',format(rmse, digits = 3), '  MSE: ',format(mse, digits = 6) )
 ```
 
+```{r chk_assmp, echo=TRUE}
+
+#check for linear model assumptions
+
+#normality test
+shapiro.test(model1$residuals)
+#homoscedasticity test -assumption of equal or similar variances [we want to reject]
+bptest(model1)
+cat("Multicolinearity test\n")
+#Multicolinearity test  [indpendent, predictor variable have strong relationship]
+vif(model1)
+```
+
+
 ##Research tip
-our model has variables that are not significant, Why?
+our model has variables that are not significant, some of our assumptions
+for linear model failed.  Why?
 What is Length 1 and 2 represent, lets look at the slides. 
 
+##Tuning the model
 
 ##New model
 
 ```{r nm, echo=TRUE}
-#only using significate variables
+#only using significant variables
 
-df3<-df%>%select(Species,Length3,Weight)
-set.seed(42)
+dfm2<-df%>%select(Height, Width,Length1,Weight)
+set.seed(100)
 
+p1<- ggplot(dfm1, aes(y = Weight, x = Height)) +
+  geom_point()
+p2<- ggplot(dfm1, aes(y = Weight, x = Width)) +
+  geom_point()
+p3<- ggplot(dfm1, aes(y = Weight, x = Length1)) +
+  geom_point()
+
+grid.arrange(
+  p1,
+  p2,
+  p3,
+  nrow = 1,
+  top = "New Models variables",
+  bottom = textGrob(
+    "  ",
+    gp = gpar(fontface = 3, fontsize = 9),
+    hjust = 1,
+    x = 1
+  )
+)
+
+
+```
+
+```{r train, echo=TRUE}
 #create the training data, test data  80/20
-sampleSplit3 <- sample.split(Y=df3$Weight, SplitRatio=0.8)
-trainSet3 <- subset(x=df3, sampleSplit3==TRUE)
-testSet3 <- subset(x=df3, sampleSplit3==FALSE)
+sampleSplitm2 <- sample.split(Y=dfm2$Weight, SplitRatio=0.8)
+trainSetm2 <- subset(x=dfm2, sampleSplit3==TRUE)
+testSetm2 <- subset(x=dfm2, sampleSplit3==FALSE)
 
 #train the data
-model3 <- lm(formula=Weight ~ ., data=trainSet3)
-summary(model3)
+model2 <- lm(formula=Weight ~ ., data=trainSetm2)
+summary(model2)
 
 
 ```
 
 
 
-```{r, echo=TRUE}
-modelResiduals <- as.data.frame(residuals(model3))
 
-ggplot(modelResiduals, aes(residuals(model3))) +
-  geom_histogram(fill='deepskyblue', color='black')
+```{r, echo=TRUE}
+modelResiduals2 <- as.data.frame(residuals(model2))
+
+plot(model2, which=1, col=c("blue"))
+
+#qqnorm(model1$residuals)
+qqPlot(model2$residuals)
 ```
 
 
@@ -169,41 +276,60 @@ Overfitting happens due to several reasons, such as:
 ```{r}
 #using R2 of the training and test set  to check for overfitting
 
-R2_training<- cor(model3$fitted.values, trainSet3$Weight)^2
-R2_training
+R2_training<- cor(model2$fitted.values, trainSetm2$Weight)^2
+#R2_training
 
-model_test3 <- lm(formula=Weight ~ ., data=testSet3)
-summary(model_test3)
-R2_test3<- cor(model_test3$fitted.values, testSet3$Weight)^2
-R2_test3
+model_test2 <- lm(formula=Weight ~ ., data=testSetm2)
+#summary(model_test2)
 
-#avPlots(model_test3)
+R2_test2<- cor(model_test2$fitted.values, testSetm2$Weight)^2
+#R2_test2
+
+
+message('Checking for Overfitting for second model','\n','Training data R2: ',format(R2_training , digits = 3) , '  Test data R2: ',format(R2_test2, digits = 3))
 
 ```
 
+##The training dataset performance is lower compared to the test dataset- The model 
+##isn't overfited.
 
 ##Model evaulation measures
 
 ```{r evluation2, echo=TRUE}
-#calculate Evaulation measures
+#calculate Evaluation measures
 
 #Mean Squared Error (MSE): The average squared difference between the predicted #and actual values of the target variable.
-res <- model_test3$residuals
-mse<-mean(res**2)
-mse
+res <- model_test2$residuals
+mse2<-mean(res**2)
+#mse2
 
 #Root Mean Squared Error (RMSE): The square root of the mean squared error.
 
 # For convenience put the residuals in the variable res
-res <- model_test3$residuals
+res <- model_test2$residuals
 
 # Calculate RMSE, assign it to the variable rmse and print it
-(rmse <- sqrt(mean(res**2)))
+rmse2 <- sqrt(mean(res**2))
 
 #R2 – Score
-	R2_test3<- cor(model_test3$fitted.values, testSet3$Weight)^2
-	R2_test3
+	R2_test2<- cor(model_test2$fitted.values, testSetm2$Weight)^2
+#	R2_test2
+	
+
+message('Model evaulation measures','\n','R2: ',format(R2_test2 , digits = 3) , '  RMSE: ',format(rmse2, digits = 3), '  MSE: ',format(mse2, digits = 6) )
 ```
 
+```{r ckassmp, echo=TRUE}
+#check for linear model assumptions
+
+#normality test
+shapiro.test(model_test3$residuals)
+#homoscedasticity test -assumption of equal or similar variances [we want to reject]
+bptest(model_test3)
+
+cat("Multicolinearity test\n")
+#Multicolinearity test  [indpendent, predictor variable have strong relationship]
+vif(model_test3)
+```
 
 
