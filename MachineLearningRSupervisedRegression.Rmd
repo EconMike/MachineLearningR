@@ -31,11 +31,12 @@ library(dplyr)
 library(ggplot2)
 library(corrgram)
 library(gridExtra)
-
+library(ggpubr)
 #for Machine Learning
 library(caTools)
 library(caret)
 library(car)
+library(lmtest)
 
 options(max.print=999999)
 ```
@@ -45,7 +46,7 @@ options(max.print=999999)
 You can also embed plots, for example:
 
 ```{r data, echo=FALSE}
-df <- read.csv('F:/YOUR DIRECTORY/Fish.csv')
+df <- read.csv('F:/Statistics seminars DC/ML in R Fishing example/Fish.csv')
 
 head(df)
 
@@ -103,13 +104,8 @@ grid.arrange(
   p4,
   p5,
   nrow = 1,
-  top = "Title of the page",
-  bottom = textGrob(
-    "this footnote is right-justified",
-    gp = gpar(fontface = 3, fontsize = 9),
-    hjust = 1,
-    x = 1
-  )
+  top = "Title of the page"
+  
 )
 ```
 
@@ -149,13 +145,13 @@ qqPlot(model1$residuals)
 #using R2 of the training and test set  to check for overfitting
 
 R2_training1<- cor(model1$fitted.values, trainSet$Weight)^2
-R2_training1
+#R2_training1
 
 model_test1 <- lm(formula=Weight ~ ., data=testSet)
 #summary(model_test1)
 
 R2_test1<- cor(model_test1$fitted.values, testSet$Weight)^2
-R2_test1
+#R2_test1
 
 
 message('Checking for Overfitting','\n','Training data R2: ',format(R2_training1 , digits = 3) , '  Test data R2: ',format(R2_test1, digits = 3))
@@ -183,7 +179,7 @@ rmse <- sqrt(mean(res**2))
 #R2 – Score
 	R2_<- cor(model1$fitted.values, trainSet$Weight)^2
 	#R2_
-message('Model evaulation measures','\n','R2: ',format(R2_ , digits = 3) , '  RMSE: ',format(rmse, digits = 3), '  MSE: ',format(mse, digits = 6) )
+message('Model 1 evaulation measures','\n','R2: ',format(R2_ , digits = 3) , '  RMSE: ',format(rmse, digits = 3), '  MSE: ',format(mse, digits = 6) )
 ```
 
 ```{r chk_assmp, echo=TRUE}
@@ -227,14 +223,7 @@ grid.arrange(
   p2,
   p3,
   nrow = 1,
-  top = "New Models variables",
-  bottom = textGrob(
-    "  ",
-    gp = gpar(fontface = 3, fontsize = 9),
-    hjust = 1,
-    x = 1
-  )
-)
+  top = "New Models variables")
 
 
 ```
@@ -316,7 +305,7 @@ rmse2 <- sqrt(mean(res**2))
 #	R2_test2
 	
 
-message('Model evaulation measures','\n','R2: ',format(R2_test2 , digits = 3) , '  RMSE: ',format(rmse2, digits = 3), '  MSE: ',format(mse2, digits = 6) )
+message('Model 2 evaulation measures','\n','R2: ',format(R2_test2 , digits = 3) , '  RMSE: ',format(rmse2, digits = 3), '  MSE: ',format(mse2, digits = 6) )
 ```
 
 ```{r ckassmp, echo=TRUE}
