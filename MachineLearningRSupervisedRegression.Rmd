@@ -78,35 +78,24 @@ colSums(is.na(df))
 
 ```{r plot, echo=TRUE}
 
+dfm1<-df%>%select(-Species) # more concise
 
-dfm1<-df%>%select(Height, Width,Length1,Length2, Length3,Weight)
 set.seed(100)
 
 boxplot(dfm1)
 
+# facet_wrap to avoid code duplication
+facet_plot_vars<-function(df, title_text) {
+  df_melted<-melt(df, id.vars="Weight")
 
-p1<- ggplot(dfm1, aes(y = Weight, x = Height)) +
-  geom_point()
-p2<- ggplot(dfm1, aes(y = Weight, x = Width)) +
-  geom_point()
-p3<- ggplot(dfm1, aes(y = Weight, x = Length1)) +
-  geom_point()
-p4<- ggplot(dfm1, aes(y = Weight, x = Length2)) +
-  geom_point()
-p5<- ggplot(dfm1, aes(y = Weight, x = Length3)) +
-  geom_point()
+  ggplot(data=df_melted, aes(value, Weight)) +
+    geom_point(stat="identity") +
+    facet_wrap(~variable, scales="free") +
+    labs(x="value",
+         title=title_text)
+}
 
-
-grid.arrange(
-  p1,
-  p2,
-  p3,
-  p4,
-  p5,
-  nrow = 1,
-  top = "Title of the page"
-  
-)
+facet_plot_vars(dfm1, "Weight vs. all variables")
 ```
 
 ##Cross Validation
@@ -117,7 +106,7 @@ Random Split
 Time-Based Split
 K-Fold Cross-Validation
 
-We are using Random split (similar to bootstrping) randomly sample a percentage of data into training and testing sets. The advantage of this method is that there is a good chance that the original population is well represented in all two sets. the hope is that random splitting will prevent a biased sampling of data.
+We are using Random split (similar to bootstrapping) to randomly sample a percentage of data into training and testing sets. The advantage of this method is that there is a good chance that the original population is well represented in all two sets. the hope is that random splitting will prevent a biased sampling of data.
 
 ```{r cross_val, echo=TRUE}
 
@@ -211,28 +200,15 @@ What is Length 1 and 2 represent, lets look at the slides.
 dfm2<-df%>%select(Height, Width,Length1,Weight)
 set.seed(100)
 
-p1<- ggplot(dfm1, aes(y = Weight, x = Height)) +
-  geom_point()
-p2<- ggplot(dfm1, aes(y = Weight, x = Width)) +
-  geom_point()
-p3<- ggplot(dfm1, aes(y = Weight, x = Length1)) +
-  geom_point()
-
-grid.arrange(
-  p1,
-  p2,
-  p3,
-  nrow = 1,
-  top = "New Models variables")
-
-
+# facet_wrap to avoid code duplication
+facet_plot_vars(dfm2, "Weight vs. new model's variables")
 ```
 
 ```{r train, echo=TRUE}
 #create the training data, test data  80/20
 sampleSplitm2 <- sample.split(Y=dfm2$Weight, SplitRatio=0.8)
-trainSetm2 <- subset(x=dfm2, sampleSplit3==TRUE)
-testSetm2 <- subset(x=dfm2, sampleSplit3==FALSE)
+trainSetm2 <- subset(x=dfm2, sampleSplitm2==TRUE)
+testSetm2 <- subset(x=dfm2, sampleSplitm2==FALSE)
 
 #train the data
 model2 <- lm(formula=Weight ~ ., data=trainSetm2)
@@ -312,13 +288,11 @@ message('Model 2 evaulation measures','\n','R2: ',format(R2_test2 , digits = 3) 
 #check for linear model assumptions
 
 #normality test
-shapiro.test(model_test3$residuals)
+shapiro.test(model_test2$residuals)
 #homoscedasticity test -assumption of equal or similar variances [we want to reject]
-bptest(model_test3)
+bptest(model_test2)
 
 cat("Multicolinearity test\n")
 #Multicolinearity test  [indpendent, predictor variable have strong relationship]
-vif(model_test3)
+vif(model_test2)
 ```
-
-
