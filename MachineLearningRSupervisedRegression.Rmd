@@ -46,7 +46,7 @@ options(max.print=999999)
 You can also embed plots, for example:
 
 ```{r data, echo=FALSE}
-df <- read.csv('F:/Statistics seminars DC/ML in R Fishing example/Fish.csv')
+df <- read.csv('F:/YOUR DIRECTORY/Fish.csv')
 
 head(df)
 
